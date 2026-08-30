@@ -1,9 +1,36 @@
 # Helix ECO Glove — 生长记录
 
-> **版本**：v1.1
+> **版本**：v1.2
 > **日期**：2026-08-31
 > **所属方法论**：phyt-DNA 方法论 v1.0
 > **规则**：仅保留最近 3 条记录，超则归档至 `docs/archive/growth/`（已版本化，永不删除）
+
+---
+
+## [2026-08-31] P3 完成 — MCP-Learner deprecated 标记 + 审查体系 L1
+
+### 触发条件
+P2 完成后，需要清理 MCP-Learner 中的旧 glove 代码，并建立审查体系 L1（静态检查），确保 MCP-Learner 学习生成的工具 Manifest 格式正确、风险等级合理、参数 Schema 完整。
+
+### 变更性质
+- **MCP-Learner 清理**：`src/glove/` 模块标记为 deprecated，说明已迁移至 HelixECO-Glove，计划 v0.3.0 移除
+- **审查体系 L1**：在 `core/src/reviewer.rs` 中实现 `StaticReviewer`，提供 9 条审查规则（R001-R009）
+- **审查结果类型**：`Severity`（Info/Warning/Error）、`ReviewFinding`、`ReviewReport`
+- **工具 Manifest 最小子集**：`ToolManifest`（不依赖 tentacle-core，保持 core 纯净）
+
+### 关键数据
+- 审查规则：9 条（R001 名称非空 / R002 SemVer 版本 / R003 描述 / R004 参数 Schema / R005 风险等级 / R006 平台标识 / R007 host_os / R008 高风险工具详情 / R009 点分命名空间）
+- reviewer 测试：10 个全绿
+- 总测试数：44 个（22 core + 13 macos + 8 adapter + 1 doc）
+
+### 架构决策
+- **审查器放在 core crate**：保持纯净，不依赖 tentacle-core，可被任何项目使用
+- **三级严重级别**：Info（不阻塞）/ Warning（建议修复）/ Error（必须修复）
+- **审查体系三层架构**：L1 静态检查（本阶段）→ L2 dry_run 沙箱预执行 → L3 人类审查
+- **可演化设计**：审查规则版本化（RULES_VERSION），支持 L2 反馈自动升级 L1 规则
+
+### 下一步
+P4 — 审查体系 L2（dry_run 沙箱预执行）+ 规则自进化机制
 
 ---
 
