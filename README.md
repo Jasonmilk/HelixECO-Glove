@@ -2,7 +2,7 @@
 
 > Native OS/device adapters for the Helix ecosystem. All gloves implement the standard `EcoGlove` trait, loadable by Helix-Tentacle with platform-aware gating.
 
-**Current Status**: P1 in progress — EcoGlove trait + macOS Glove minimum viable (26 tests all green)
+**Current Status**: P2 complete — Tentacle integration + platform-aware plugin loader (34 tests all green)
 
 ---
 
@@ -37,6 +37,10 @@ HelixECO-Glove/
 │   └── src/lib.rs          # EcoGlove trait + all standard types
 ├── gloves/                 # Platform-specific glove implementations
 │   └── macos/              # macOS native glove
+│       ├── Cargo.toml
+│       └── src/lib.rs
+├── adapters/               # Adapters for external systems
+│   └── tentacle/           # Helix-Tentacle adapter (EcoGlove → Tentacle Tool)
 │       ├── Cargo.toml
 │       └── src/lib.rs
 ├── tests/                  # Integration tests
@@ -168,6 +172,59 @@ async fn main() -> Result<(), GloveError> {
     Ok(())
 }
 ```
+
+---
+
+## Tentacle Integration (P2)
+
+HelixECO-Glove provides a `tentacle-adapter` crate that converts any `EcoGlove` implementation into Tentacle's `Manifest` + `Tool`, enabling platform-aware plugin loading.
+
+### Quick Example
+
+```rust
+use helix_eco_glove_core::*;
+use helix_eco_glove_macos::MacOSGlove;
+use helix_eco_glove_tentacle_adapter::register_glove;
+use tentacle_core::ToolRegistry;
+use std::sync::Arc;
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let mut registry = ToolRegistry::new();
+
+    // Register macOS glove (only if current platform is macOS)
+    let glove = Arc::new(MacOSGlove::new()) as Arc<dyn EcoGlove>;
+    register_glove(&glove, &mut registry)?;
+
+    // List tools supported on current platform
+    let tools = registry.supported_tool_names();
+    println!("Available tools: {:?}", tools);
+
+    // Execute a tool
+    let tool = registry.get_tool("macos.fs.list_directory").unwrap();
+    let result = tool.execute(tentacle_core::ExecutionRequest {
+        tool: "macos.fs.list_directory".to_string(),
+        params: serde_json::json!({"directory": "/tmp"}),
+        identity_labels: std::collections::HashMap::new(),
+        trace_id: None,
+        seen_entropy_bloom: None,
+    })?;
+
+    println!("Success: {}", result.ok);
+    Ok(())
+}
+```
+
+### Platform-Aware Filtering
+
+The adapter and Tentacle's `ToolRegistry` provide dual-layer platform gating:
+
+| Method | Description |
+|---|---|
+| `GloveAdapter::register_supported()` | Only register tools if the glove supports the current platform |
+| `ToolRegistry::index_for_current_platform()` | Get manifest indices for tools supported on current platform |
+| `ToolRegistry::supported_tool_names()` | Get names of tools supported on current platform |
+| `ToolRegistry::unsupported_tool_names()` | Get names of tools NOT supported (for CLI display) |
+| `ToolRegistry::is_supported_on_current_platform(name)` | Check if a specific tool is available |
 
 ---
 

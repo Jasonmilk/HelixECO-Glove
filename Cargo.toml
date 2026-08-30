@@ -2,6 +2,7 @@
 members = [
     "core",
     "gloves/macos",
+    "adapters/tentacle",
 ]
 resolver = "2"
 

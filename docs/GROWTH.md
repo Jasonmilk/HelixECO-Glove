@@ -1,9 +1,37 @@
 # Helix ECO Glove — 生长记录
 
-> **版本**：v1.0
+> **版本**：v1.1
 > **日期**：2026-08-31
 > **所属方法论**：phyt-DNA 方法论 v1.0
 > **规则**：仅保留最近 3 条记录，超则归档至 `docs/archive/growth/`（已版本化，永不删除）
+
+---
+
+## [2026-08-31] P2 完成 — Tentacle 集成 + 平台感知加载器
+
+### 触发条件
+P1 完成后，需要将 HelixECO-Glove 集成到 Helix-Tentacle，使 Tentacle 可以统一加载和执行所有平台手套。同时需要实现平台感知的插件加载器，防止"在 macOS 上用鸿蒙插件"。
+
+### 变更性质
+- **新增适配器 crate**：`adapters/tentacle/`，将 EcoGlove 实现转换为 Tentacle 的 Manifest + Tool
+- **Tentacle Manifest 扩展**：新增 `PlatformSupport` 结构体（platform + host_os），与 CI-144 PFP 和 EcoGlove trait 对齐
+- **ToolRegistry 平台过滤**：新增 6 个平台感知方法（index_for_current_platform / index_for_os / is_supported_on_current_platform / supported_tool_names / unsupported_tool_names）
+- **GloveAdapter**：提供 register_supported（只注册当前平台支持的工具）、manifests()、tools()、manifest_indices() 等便捷方法
+- **工具命名规范**：点分命名空间 `<platform>.<domain>.<action>`（如 macos.fs.read_file）
+
+### 关键数据
+- 适配器测试：8 个单元测试 + 1 个文档测试全绿
+- 总测试数：34 个（12 core + 13 macos + 8 adapter + 1 doc）
+- Tentacle-core 测试：52 个全绿（含新增平台过滤方法）
+- 新增代码：约 500 行（适配器 lib.rs）
+
+### 架构决策
+- **适配器放在 HelixECO-Glove 仓库**：极致解耦，Tentacle 不需要知道 EcoGlove 的存在
+- **平台过滤双层保险**：编译时 cfg(target_os) 物理排除 + 运行时 host_os() 白名单过滤
+- **异步转同步**：EcoGlove 的 execute 是 async，适配器用 tokio::runtime::Handle::block_on 转换为 Tentacle 的同步 Tool trait
+
+### 下一步
+P3 — MCP-Learner 标记 `src/glove/` 为 deprecated + 审查体系 L1（静态检查）
 
 ---
 
