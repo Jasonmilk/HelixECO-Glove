@@ -1,20 +1,20 @@
 # Helix ECO Glove — 开发导航牌（PLAN）
 
-> **版本**：v1.0（P1 启动，2026-08-31）
-> **状态**：🚧 P1 — 项目初始化 + EcoGlove trait + macOS Glove 最小版本（进行中）
+> **版本**：v1.1（P1 完成，2026-08-31）
+> **状态**：✅ P1 完成 — 项目初始化 + EcoGlove trait + macOS Glove 最小版本
 > **分支**：main
 > **所属方法论**：phyt-DNA 方法论 v1.0
 > **规则**：本文件只含当前阶段 + 下一阶段预览 + 阶段总览地图。完成阶段 → GROWTH.md。总行数 ≤150，超出触发历史迁移。
 
 ---
 
-## 1. 当前阶段：P1 — 项目初始化 + EcoGlove trait + macOS Glove 最小版本
+## 1. 当前阶段：P2 预览 — Tentacle 集成 + 平台感知加载器
 
-> **状态**：🚧 进行中。
-> **目标**：建立 HelixECO-Glove 项目骨架，定义 EcoGlove 标准接口，实现 macOS 手套最小版本（6 个工具）。
-> **前置依赖**：无（新项目）。
+> **状态**：⏳ 待启动。
+> **目标**：将 HelixECO-Glove 集成到 Helix-Tentacle，实现平台感知的插件加载器。
+> **前置依赖**：P1 完成（EcoGlove trait + macOS Glove 最小版本，26 测试全绿）。
 
-### 1.1 任务拆分
+### 1.1 任务拆分（P1 已完成）
 
 | 任务 | 内容 | 状态 |
 |---|---|---|
@@ -22,7 +22,7 @@
 | T2 | EcoGlove trait 定义：Platform/RiskLevel/CapabilityDomain/ToolDefinition/ToolResult/GloveError | ✅ 完成 |
 | T3 | macOS Glove 最小版本：6 个工具（文件读写/目录列表/命令执行/进程列表/AppleScript） | ✅ 完成 |
 | T4 | 测试：单元测试 + 文档测试，覆盖率 ≥ 80% | ✅ 完成（26 测试全绿） |
-| T5 | 文档：README 中英文版 + 提交 + 推送 GitHub | ⏳ 待启动 |
+| T5 | 文档：README 中英文版 + 提交 + 推送 GitHub | ✅ 完成 |
 
 ### 1.2 代码真相源
 
@@ -72,7 +72,7 @@
 
 | 阶段 | 内容 | 状态 |
 |---|---|---|
-| **P1** | **项目初始化 + EcoGlove trait + macOS Glove 最小版本** | **🚧 进行中** |
+| **P1** | **项目初始化 + EcoGlove trait + macOS Glove 最小版本** | **✅ 完成** |
 | P2 | Tentacle 集成 + 平台感知加载器 | ⏳ 预览 |
 | P3 | MCP-Learner 标记 deprecated + 审查体系 L1（静态检查） | ⏳ 预览 |
 | P4 | 审查体系 L2（dry_run 沙箱预执行）+ 规则自进化 | ⏳ 预览 |
