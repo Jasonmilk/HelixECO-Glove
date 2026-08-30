@@ -8,14 +8,18 @@
 
 ---
 
-## 1. 当前阶段：P4 预览 — L1 与 MCP-Learner 管道集成 + 审查体系 L2
+## 1. 当前阶段：P4-T2 预览 — 审查体系 L2（dry_run 沙箱预执行）
 
 > **状态**：⏳ 待启动。
-> **目标**：
-> 1. **P4-T1（首要任务）**：将 L1 StaticReviewer 集成到 MCP-Learner 的输出管道，实现 raw/ → staging/ → stable/ 状态迁移自动化
-> 2. **P4-T2**：审查体系 L2（dry_run 沙箱预执行）
-> 3. **P4-T3**：审查规则自进化机制（L2 反馈 → L1 规则更新）
-> **前置依赖**：P3 完成（审查体系 L1 静态检查，10 个测试全绿；MCP-Learner glove 模块 feature flag 隔离）。
+> **目标**：实现审查体系 L2（dry_run 沙箱预执行），对 L1 标记为 Warning 的工具进行真实场景测试验证。
+> **前置依赖**：P4-T1 完成（L1 与 MCP-Learner 管道集成 + raw/staging/stable/rejected 状态迁移自动化，8 个测试全绿）。
+>
+> **P4-T1 已完成**：
+> - MCP-Learner 新增 `post_learn` 模块：`ReviewPipeline` + `ReviewPipelineConfig` + `ToolState` + `ToolReviewResult` + `BatchReviewResult`
+> - 状态迁移自动化：Error → rejected/，Warning → staging/，Info/无问题 → stable/
+> - 集成到 `mcp-learner learn` 命令：学习完成后自动审查并输出状态统计
+> - 审查报告生成：`{server}_review_report.json`
+> - 8 个 post_learn 测试全绿，MCP-Learner 总测试 50 个全绿
 
 ### 1.1 任务拆分（P1 已完成）
 
