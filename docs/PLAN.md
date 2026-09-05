@@ -1,7 +1,7 @@
 # Helix ECO Glove — 开发导航牌（PLAN）
 
-> **版本**：v1.3（P3 完成，2026-08-31）
-> **状态**：✅ P3 完成 — MCP-Learner deprecated 标记 + 审查体系 L1（静态检查）
+> **版本**：v1.4（P4-T1 完成，2026-09-06）
+> **状态**：✅ P4-T1 完成 — L1 与 MCP-Learner 管道集成 + 状态迁移自动化（raw/staging/stable/rejected）；P4-T2 dry_run 沙箱预览
 > **分支**：main
 > **所属方法论**：phyt-DNA 方法论 v1.0
 > **规则**：本文件只含当前阶段 + 下一阶段预览 + 阶段总览地图。完成阶段 → GROWTH.md。总行数 ≤150，超出触发历史迁移。

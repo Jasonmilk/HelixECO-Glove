@@ -116,4 +116,27 @@ P2 完成后，发现 MCP-Learner 中包含 macOS Glove 代码，违背了"单�
 
 ---
 
-**最后更新**：2026-08-31
+## [2026-09-06] P4-T1 完成 — L1 与 MCP-Learner 管道集成 + 状态迁移自动化
+
+### 触发条件
+P4-T1 完成：L1 静态审查接入 MCP-Learner 管道，raw/staging/stable/rejected 状态迁移自动化。
+
+### 变更性质
+- **post_learn 管道集成**：MCP-Learner 新增 `post_learn` 模块（ReviewPipeline + ReviewPipelineConfig + ToolState + ToolReviewResult + BatchReviewResult）
+- **状态迁移自动化**：Error → rejected/，Warning → staging/，Info/无问题 → stable/
+- **审查报告**：`{server}_review_report.json` 生成
+- **集成点**：`mcp-learner learn` 命令学习完成后自动审查并输出状态统计
+
+### 关键成果
+- **测试**：8 个 post_learn 测试全绿（MCP-Learner 总 50 个全绿——注：此后 1 个测试回归为 failed，ECOSYSTEM 已记录待修）
+- **生态闭环**：MCP-Learner 学习 → Glove L1 审查 → stable/ → Tentacle 加载执行
+
+### 提交
+- `ea923fe`（P3：deprecated marker + Reviewer L1）+ `744cf4e`/`cfeb594`（P4-T1 文档）
+
+### 状态
+✅ P4-T1 完成；P4-T2（dry_run 沙箱预执行）待启动
+
+---
+
+**最后更新**：2026-09-06
