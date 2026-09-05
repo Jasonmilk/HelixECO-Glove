@@ -2,7 +2,7 @@
 
 > Native OS/device adapters for the Helix ecosystem. All gloves implement the standard `EcoGlove` trait, loadable by Helix-Tentacle with platform-aware gating.
 
-**Current Status**: P3 complete — MCP-Learner deprecated + Reviewer L1 static checks (44 tests all green)
+**Current Status**: P4-T1 complete — L1 与 MCP-Learner 管道集成 + 状态迁移自动化（raw/staging/stable/rejected）；P4-T2（L2 dry_run 沙箱）预览中（45 tests all green, 实测 2026-09-06）
 
 ---
 
