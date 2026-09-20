@@ -17,14 +17,22 @@
 //! | ② | （不在本仓库：见 `helix-mind/tools/hooks/` 的比值判据） | — |
 //! | ③ | 注册表加值 ⇒ R005 自动接受（派生性正控） | — |
 //! | ④ | 空字段 ⇒ 处置不得轻于 `unknown` | 🔴 沉默 `Warning` < 声明 `Error` |
+//! | ④c | 在**被消费的** `Disposition` 上断言同一件事（回归断言，I6 落地） | 🔴 两条处置互换 |
 //!
-//! # 它刻意不碰的东西
+//! # 它刻意不碰的东西（**这条边界适用于 ①②③④ 四条，不适用于 ④c**）
 //!
-//! 它**不**引用 `code` / `Disposition` / `classify_risk_level` —— 那些是修复引入的 API，
-//! 一旦引用就无法在修复前编译，"修复前是红的"这句话就没有证据了。
-//! 判据只看 `Severity`（`Info < Warning < Error`），因为严重度是修复前后都存在的量。
+//! ①②③④ **不**引用 `code` / `Disposition` / `classify_risk_level` —— 那些是修复引入的
+//! API，一旦引用就无法在修复前编译，"修复前是红的"这句话就没有证据了。
+//! 这四条判据只看 `Severity`（`Info < Warning < Error`），因为严重度是修复前后都存在的量。
+//!
+//! **④c 是有意的例外**（2026-09-21，I5/I6/I7 落地）：它引用 `risk_dispositions()` 与
+//! `code`，因为它要断言的**就是**被消费的那个对象。代价是④c 无法在修复前编译 ——
+//! 它因此**不承担**"修复前是红的"这个举证责任，它承担的是**"能抓到回归"**：
+//! 修复已landed（`48a5db5`），④c 要防的是**退化**，而退化在修复后的代码上可以随意
+//! 制造出来（已实测：把 `severity→disposition` 的桥接掉个方向，①②③④ 与旧 ④b
+//! **六条全绿**，只有 ④c 变红）。
 
-use helix_eco_glove_core::reviewer::{Severity, StaticReviewer, ToolManifest};
+use helix_eco_glove_core::reviewer::{Disposition, Severity, StaticReviewer, ToolManifest};
 
 /// 与 `reviewer.rs` 的 `valid_manifest()` 同形：除 `risk_level` 外全部合法，
 /// 这样任何 R005 之外的发现都不会污染探针。
@@ -68,6 +76,24 @@ fn r005_message(risk_level: &str) -> Option<String> {
         .iter()
         .find(|f| f.rule_id == "R005")
         .map(|f| f.message.clone())
+}
+
+/// R005 对这个输入给出的**处置** —— 即管道实际消费的那个对象（`staging/` / `rejected/`），
+/// 而不是它的代理 `Severity`。见 ④c 的说明。
+fn r005_dispositions(risk_level: &str) -> Vec<Disposition> {
+    StaticReviewer::new()
+        .review(&manifest_with(risk_level))
+        .risk_dispositions()
+}
+
+/// R005 对这个输入给出的**注册诊断码**（契约 §6：每个码可进证轨、可计数）。
+fn r005_code(risk_level: &str) -> Option<String> {
+    let report = StaticReviewer::new().review(&manifest_with(risk_level));
+    report
+        .findings
+        .iter()
+        .find(|f| f.rule_id == "R005")
+        .and_then(|f| f.code.clone())
 }
 
 /// 严重度序：**越大越重**。单调性断言用它，而不是靠"看起来更重"。
@@ -195,6 +221,60 @@ fn criterion_4b_uncertainty_ladder_is_monotonic() {
             pair[1].0
         );
     }
+}
+
+/// ④c **回归断言：在"实际被消费的那个对象"上断言，而不是在它的代理上。**
+///
+/// 契约 §13.3 对 I6 的判据原文是「注入空字段与显式 `unknown` ⇒ 断言前者**不轻于**后者」，
+/// 而 §13.2 第 1 条的形态要求是「判据必须指向实际被消费的对象」。管道真正消费的是
+/// [`StaticReviewer::review`] 交出的 `Disposition`（⇒ `staging/` 或 `rejected/`）；
+/// `Severity` 只是它的代理。所以这里断言处置本身：
+///
+/// 1. `unknown` ⇒ **Quarantine**（`staging/`），空字段 ⇒ **Rejected**（`rejected/`）——
+///    这是修复后的形状，也是"删掉字段"这个最便宜的攻击所必须撞上的那道墙；
+/// 2. 按 `acceptance_rank()` 单调：`空字段 >= unknown`。**将断言 1 与 2 合读**，
+///    「不轻于」才被钉成「严格更重」——单看 `>=` 会容许"两者都是 Rejected"，
+///    那会抹掉 `unknown` 的隔离语义（契约 §12.4：`unknown` 走 `staging/`）；
+/// 3. 两条发现带**不同的注册码**：契约 §1.2 规则 3「`unknown` 与 `silence` 不得混为一谈」。
+///
+/// 修复前的形状（`unknown` ⇒ `Rejected` 而沉默 ⇒ `Quarantine`）在这三条上**全部为红**。
+#[test]
+fn criterion_4c_consumed_disposition_of_silence_is_never_lighter_than_unknown() {
+    let u = r005_dispositions("UNKNOWN");
+    let e = r005_dispositions("");
+    assert_eq!(u.len(), 1, "UNKNOWN 必须恰好产生一条 R005 处置：{u:?}");
+    assert_eq!(
+        e.len(),
+        1,
+        "空字段必须恰好产生一条 R005 处置（沉默不得无痕放行）：{e:?}"
+    );
+
+    assert_eq!(
+        u[0],
+        Disposition::Quarantine,
+        "unknown 是**一种声明** ⇒ 隔离待人工复核（staging/），不得被拒，也不得放行"
+    );
+    assert_eq!(
+        e[0],
+        Disposition::Rejected,
+        "空字段（沉默）不是一种声明 ⇒ 拒绝（rejected/）；放行它就是把「删字段」变成最便宜的攻击"
+    );
+
+    assert!(
+        e[0].acceptance_rank() >= u[0].acceptance_rank(),
+        "I6 单调性：空字段({:?}, rank={}) 不得轻于 unknown({:?}, rank={})",
+        e[0],
+        e[0].acceptance_rank(),
+        u[0],
+        u[0].acceptance_rank()
+    );
+
+    let uc = r005_code("UNKNOWN").expect("unknown 的发现必须带注册码");
+    let ec = r005_code("").expect("沉默的发现必须带注册码");
+    assert_ne!(
+        ec, uc,
+        "unknown 与 silence 各有自己的码（§1.2 规则 3），实际都是 {uc:?}"
+    );
 }
 
 // ============================================================================
